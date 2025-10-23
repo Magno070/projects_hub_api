@@ -6,7 +6,15 @@ const {
   NotFoundError,
 } = require("../utils/apiError");
 
-const create = async ({ nickname, discountType, ranges }) => {
+/**
+ * Create a new discount table
+ * @param {Object} data - The discount table data
+ * @param {string} data.nickname - The nickname of the discount table
+ * @param {string} data.discountType - The type of discount
+ * @param {Array} data.ranges - The ranges of the discount table
+ * @returns {Promise<DiscountTable>}
+ */
+const createTable = async ({ nickname, discountType, ranges }) => {
   const existingDiscountTable = await DiscountTable.findOne({
     nickname: nickname,
   });
@@ -43,13 +51,22 @@ const create = async ({ nickname, discountType, ranges }) => {
   return discountTable;
 };
 
-const getAll = async () => {
+/**
+ * Get all discount tables
+ * @returns {Promise<Array<DiscountTable>>}
+ */
+const getAllTables = async () => {
   const discountTables = await DiscountTable.find();
   if (!discountTables) throw new NotFoundError("No discount tables found");
   return discountTables;
 };
 
-const getById = async (id) => {
+/**
+ * Get a discount table by ID
+ * @param {string} id - The ID of the discount table
+ * @returns {Promise<DiscountTable>}
+ */
+const getTableById = async (id) => {
   if (!isValidObjectId(id))
     throw new BadRequestError("Invalid discount table ID");
   const discountTable = await DiscountTable.findById(id);
@@ -57,4 +74,53 @@ const getById = async (id) => {
   return discountTable;
 };
 
-module.exports = { create, getAll, getById };
+/**
+ * Update a discount table
+ * @param {string} id - The ID of the discount table
+ * @param {Object} data - The fields to update
+ * @returns {Promise<DiscountTable>}
+ */
+const updateTable = async (id, data) => {
+  if (!isValidObjectId(id))
+    throw new BadRequestError("Invalid discount table ID");
+
+  const updateFields = {};
+  if (typeof data.nickname !== "undefined")
+    updateFields.nickname = data.nickname;
+  if (typeof data.discountType !== "undefined")
+    updateFields.discountType = data.discountType;
+  if (typeof data.ranges !== "undefined") updateFields.ranges = data.ranges;
+
+  if (Object.keys(updateFields).length === 0) {
+    throw new BadRequestError("No valid fields provided for update");
+  }
+
+  const discountTable = await DiscountTable.findByIdAndUpdate(
+    id,
+    { $set: updateFields },
+    {
+      new: true,
+    }
+  );
+  if (!discountTable) throw new NotFoundError("Discount table not found");
+  return discountTable;
+};
+
+/**
+ * Delete a discount table
+ * @param {string} id - The ID of the discount table
+ * @returns {Promise<void>}
+ */
+const deleteTable = async (id) => {
+  if (!isValidObjectId(id))
+    throw new BadRequestError("Invalid discount table ID");
+  await DiscountTable.findByIdAndDelete(id);
+};
+
+module.exports = {
+  createTable,
+  getAllTables,
+  getTableById,
+  updateTable,
+  deleteTable,
+};
