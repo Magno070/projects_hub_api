@@ -3,7 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 
 // Import routes
-const routes = require("./src/routes");
+const routes = require("./src/routes/index");
 
 // Connect to MongoDB
 mongoose

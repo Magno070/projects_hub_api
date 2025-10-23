@@ -3,9 +3,11 @@ const router = express.Router();
 
 // Import routes
 // const exampleRoutes = require("./routesExample");
+const discountsTableRoutes = require("./discountsTable");
 
 // Configure routes
 // router.use("/example", exampleRoutes);
+router.use("/discounts-table", discountsTableRoutes);
 
 // Health check route
 router.get("/health", (req, res) => {
