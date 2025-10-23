@@ -8,6 +8,6 @@ const {
 } = require("../controllers/discountTable");
 
 router.post("/", createDiscountTable);
-router.get("/", getAllDiscountTables);
+router.get("/all", getAllDiscountTables);
 router.get("/:id", getDiscountTable);
 module.exports = router;

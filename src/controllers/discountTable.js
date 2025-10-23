@@ -20,46 +20,35 @@ const createDiscountTable = async (req, res, next) => {
   }
 };
 
-const getAllDiscountTables = async (req, res) => {
+const getAllDiscountTables = async (req, res, next) => {
   try {
-    const discountTables = await DiscountTable.find();
+    const discountTables = await discountTableService.getAll();
     res.status(200).json({
       success: true,
       message: "Discount tables fetched successfully",
       discountTables,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const getDiscountTable = async (req, res) => {
+const getDiscountTable = async (req, res, next) => {
   const { id } = req.params;
   try {
-    const discountTable = await DiscountTable.findById(id);
-    if (!discountTable) {
-      return res.status(404).json({
-        success: false,
-        message: "Discount table not found",
-      });
-    }
+    const discountTable = await discountTableService.getById(id);
     res.status(200).json({
       success: true,
       message: "Discount table fetched successfully",
-      discountTable,
+      data: {
+        discountTable,
+      },
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
+
 module.exports = {
   createDiscountTable,
   getAllDiscountTables,

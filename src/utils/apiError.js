@@ -28,9 +28,17 @@ class ConflictError extends ApiError {
   }
 }
 
+// 403 Forbidden: Usuário autenticado, mas sem permissão
+class ForbiddenError extends ApiError {
+  constructor(message = "Forbidden") {
+    super(403, message);
+  }
+}
+
 module.exports = {
   ApiError,
   BadRequestError,
   NotFoundError,
   ConflictError,
+  ForbiddenError, // Adicione aqui
 };

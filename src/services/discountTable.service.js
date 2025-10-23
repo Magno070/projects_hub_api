@@ -1,5 +1,10 @@
 const DiscountTable = require("../models/DiscountTable");
-const { BadRequestError, ConflictError } = require("../utils/apiError");
+const { isValidObjectId } = require("../utils/validation");
+const {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+} = require("../utils/apiError");
 
 const create = async ({ nickname, discountType, ranges }) => {
   const existingDiscountTable = await DiscountTable.findOne({
@@ -16,6 +21,8 @@ const create = async ({ nickname, discountType, ranges }) => {
       `The discount table ${existingDiscountTableWithSameRanges.nickname} with these ranges already exists`
     );
   }
+  if (!Array.isArray(ranges))
+    throw new BadRequestError("Ranges must be an array");
   for (const range of ranges) {
     if (
       range.initialRange >= range.finalRange ||
@@ -36,4 +43,18 @@ const create = async ({ nickname, discountType, ranges }) => {
   return discountTable;
 };
 
-module.exports = { create };
+const getAll = async () => {
+  const discountTables = await DiscountTable.find();
+  if (!discountTables) throw new NotFoundError("No discount tables found");
+  return discountTables;
+};
+
+const getById = async (id) => {
+  if (!isValidObjectId(id))
+    throw new BadRequestError("Invalid discount table ID");
+  const discountTable = await DiscountTable.findById(id);
+  if (!discountTable) throw new NotFoundError("Discount table not found");
+  return discountTable;
+};
+
+module.exports = { create, getAll, getById };
