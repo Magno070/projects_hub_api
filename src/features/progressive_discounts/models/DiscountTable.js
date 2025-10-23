@@ -13,7 +13,6 @@ const discountSchema = new mongoose.Schema({
   discountType: {
     type: String,
     enum: ["base", "personal"],
-    default: "personal",
     required: true,
   },
   ranges: {
@@ -35,4 +34,4 @@ const discountSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("DiscountTable", discountSchema);
+module.exports = mongoose.model("DiscountsTable", discountSchema);

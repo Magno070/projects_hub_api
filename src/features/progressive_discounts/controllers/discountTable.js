@@ -3,7 +3,6 @@ const discountTableService = require("../services/discountTable.service");
 
 const createDiscountTable = async (req, res, next) => {
   const { nickname, discountType, ranges } = req.body;
-
   try {
     const discountTable = await discountTableService.createTable({
       nickname,

@@ -24,7 +24,11 @@ const partnerSchema = new mongoose.Schema({
   },
   discountsTableId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "DiscountTable",
+    ref: "DiscountsTable",
     required: true,
   },
 });
+
+const Partner = mongoose.model("Partners", partnerSchema);
+
+module.exports = Partner;

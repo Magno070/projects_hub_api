@@ -1,11 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-// Import routes
-const discountsTableRoutes = require("./discountsTable");
-
-// Configure routes
-router.use("/discounts-table", discountsTableRoutes);
+const discountsRoutes = require("../features/progressive_discounts/routes/index");
 
 // Health check route
 router.get("/health", (req, res) => {
@@ -15,5 +11,7 @@ router.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+router.use("/progressive-discounts", discountsRoutes);
 
 module.exports = router;

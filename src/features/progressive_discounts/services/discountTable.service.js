@@ -1,10 +1,11 @@
 const DiscountTable = require("../models/DiscountTable");
-const { isValidObjectId } = require("../utils/validation");
+const { isValidObjectId } = require("../../../utils/validation");
+
 const {
   BadRequestError,
   ConflictError,
   NotFoundError,
-} = require("../utils/apiError");
+} = require("../../../utils/apiError");
 
 /**
  * Create a new discount table
@@ -29,23 +30,7 @@ const createTable = async ({ nickname, discountType, ranges }) => {
       `The discount table ${existingDiscountTableWithSameRanges.nickname} with these ranges already exists`
     );
   }
-  if (!Array.isArray(ranges))
-    throw new BadRequestError("Ranges must be an array");
-  for (const range of ranges) {
-    if (
-      range.initialRange >= range.finalRange ||
-      range.initialRange < 0 ||
-      range.finalRange < 0
-    ) {
-      throw new BadRequestError(
-        "Initial range must be less than final range and both must be greater than 0"
-      );
-    }
-    if (range.discount < 0 || range.discount > 100) {
-      throw new BadRequestError("Discount must be between 0 and 100");
-    }
-  }
-
+  _validateRanges(ranges);
   const discountTable = new DiscountTable({ nickname, discountType, ranges });
   await discountTable.save();
   return discountTable;
@@ -89,7 +74,10 @@ const updateTable = async (id, data) => {
     updateFields.nickname = data.nickname;
   if (typeof data.discountType !== "undefined")
     updateFields.discountType = data.discountType;
-  if (typeof data.ranges !== "undefined") updateFields.ranges = data.ranges;
+  if (typeof data.ranges !== "undefined") {
+    _validateRanges(data.ranges);
+    updateFields.ranges = data.ranges;
+  }
 
   if (Object.keys(updateFields).length === 0) {
     throw new BadRequestError("No valid fields provided for update");
@@ -115,6 +103,25 @@ const deleteTable = async (id) => {
   if (!isValidObjectId(id))
     throw new BadRequestError("Invalid discount table ID");
   await DiscountTable.findByIdAndDelete(id);
+};
+
+const _validateRanges = (ranges) => {
+  if (!Array.isArray(ranges))
+    throw new BadRequestError("Ranges must be an array");
+  for (const range of ranges) {
+    if (
+      range.initialRange >= range.finalRange ||
+      range.initialRange < 0 ||
+      range.finalRange < 0
+    ) {
+      throw new BadRequestError(
+        "Initial range must be less than final range and both must be greater than 0"
+      );
+    }
+    if (range.discount < 0 || range.discount > 100) {
+      throw new BadRequestError("Discount must be between 0 and 100");
+    }
+  }
 };
 
 module.exports = {
