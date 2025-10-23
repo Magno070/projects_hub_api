@@ -35,17 +35,17 @@ app.use(
 app.use("/api", routes);
 
 // Root route
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "API is working!",
-    endpoints: {
-      auth: "/api/auth",
-      projects: "/api/projects",
-      health: "/api/health",
-    },
-  });
-});
+// app.get("/", (req, res) => {
+//   res.json({
+//     success: true,
+//     message: "API is working!",
+//     endpoints: {
+//       auth: "/api/auth",
+//       projects: "/api/projects",
+//       health: "/api/health",
+//     },
+//   });
+// });
 
 // Not found route middleware
 app.use("", (req, res) => {

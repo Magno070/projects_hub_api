@@ -86,6 +86,30 @@ const createPartner = async ({
   }
 };
 
+/**
+ * Get a partner by ID
+ * @param {string} id - The ID of the partner
+ * @returns {Promise<Partner>}
+ */
+const getPartnerById = async (id) => {
+  if (!isValidObjectId(id)) throw new BadRequestError("Invalid partner ID");
+  const partner = await Partner.findById(id);
+  if (!partner) throw new NotFoundError("Partner not found");
+  return partner;
+};
+
+/**
+ * Get all partners
+ * @returns {Promise<Array<Partner>>}
+ */
+const getAllPartners = async () => {
+  const partners = await Partner.find();
+  if (!partners) throw new NotFoundError("No partners found");
+  return partners;
+};
+
 module.exports = {
   createPartner,
+  getPartnerById,
+  getAllPartners,
 };

@@ -1,4 +1,3 @@
-const DiscountTable = require("../models/DiscountTable");
 const discountTableService = require("../services/discountTable.service");
 
 const createDiscountTable = async (req, res, next) => {
