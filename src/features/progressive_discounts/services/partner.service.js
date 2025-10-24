@@ -38,52 +38,29 @@ const createPartner = async ({
     throw new BadRequestError("Discount type must be 'base' or 'personal'");
   }
 
-  // 2. Iniciar a sessão do Mongoose para a transação
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    // 3. Verificar se a tabela de desconto existe (PONTO 3)
-    //    Usamos .session(session) para incluir esta leitura na transação
-    const discountTable = await DiscountTable.findById(
-      discountsTableId
-    ).session(session);
-    if (!discountTable) {
-      // Usamos NotFoundError, seguindo o padrão do seu discountTable.service
-      throw new NotFoundError(
-        `Discounts table with ID ${discountsTableId} not found`
-      );
-    }
-
-    // 4. Verificar parceiro existente (dentro da transação para evitar race conditions)
-    const existingPartner = await Partner.findOne({ name }).session(session);
-    if (existingPartner) {
-      throw new ConflictError(`Partner with name ${name} already exists`);
-    }
-
-    // 5. Criar o novo parceiro
-    const partner = new Partner({
-      name,
-      dailyPrice,
-      clientsAmount,
-      discountType,
-      discountsTableId,
-    });
-
-    // Usamos .save({ session }) para incluir esta escrita na transação
-    await partner.save({ session });
-
-    // 6. Se tudo deu certo, "comitar" a transação
-    await session.commitTransaction();
-    return partner;
-  } catch (error) {
-    // 7. Se algo falhou, reverter (abortar) a transação
-    await session.abortTransaction();
-    throw error; // Re-lança o erro para o errorMiddleware capturar
-  } finally {
-    // 8. Encerrar a sessão em qualquer cenário (sucesso ou falha)
-    session.endSession();
+  const discountTable = await DiscountTable.findById(discountsTableId);
+  if (!discountTable) {
+    throw new NotFoundError(
+      `Discounts table with ID ${discountsTableId} not found`
+    );
   }
+
+  const existingPartner = await Partner.findOne({ name });
+  if (existingPartner) {
+    throw new ConflictError(`Partner with name ${name} already exists`);
+  }
+
+  const partner = new Partner({
+    name,
+    dailyPrice,
+    clientsAmount,
+    discountType,
+    discountsTableId,
+  });
+
+  await partner.save();
+
+  return partner;
 };
 
 /**
