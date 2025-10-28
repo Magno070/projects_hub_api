@@ -18,13 +18,41 @@ const createDiscountTable = async (req, res, next) => {
   }
 };
 
-const getAllDiscountTables = async (req, res, next) => {
+const getAllDiscountsTables = async (req, res, next) => {
   try {
     const discountTables = await discountTableService.getAllTables();
+
     res.status(200).json({
       success: true,
       message: "Discount tables fetched successfully",
-      discountTables,
+      discountTables: discountTables,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAllPersonalDiscountsTables = async (req, res, next) => {
+  try {
+    const personalDiscountsTables =
+      await discountTableService.getAllPersonalTables();
+    res.status(200).json({
+      success: true,
+      message: "Personal discount tables fetched successfully",
+      personalDiscountsTables,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getBaseDiscountTable = async (req, res, next) => {
+  try {
+    const baseDiscountTable = await discountTableService.getBaseDiscountTable();
+    res.status(200).json({
+      success: true,
+      message: "Base discount table fetched successfully",
+      baseDiscountTable,
     });
   } catch (error) {
     next(error);
@@ -51,11 +79,12 @@ const updateDiscountTable = async (req, res, next) => {
   const { id } = req.params;
   const { nickname, discountType, ranges } = req.body;
   try {
-    const discountTable = await discountTableService.updateTable(id, {
+    const discountTable = await discountTableService.updateTable(
+      id,
       nickname,
       discountType,
-      ranges,
-    });
+      ranges
+    );
     res.status(200).json({
       success: true,
       message: "Discount table updated successfully",
@@ -69,10 +98,15 @@ const updateDiscountTable = async (req, res, next) => {
 const deleteDiscountTable = async (req, res, next) => {
   const { id } = req.params;
   try {
-    await discountTableService.deleteTable(id);
+    const result = await discountTableService.deleteTable(id);
     res.status(200).json({
       success: true,
       message: "Discount table deleted successfully",
+      data: {
+        deletedTable: result.deletedTable,
+        updatedPartners: result.updatedPartners,
+        baseTable: result.baseTable,
+      },
     });
   } catch (error) {
     next(error);
@@ -81,7 +115,9 @@ const deleteDiscountTable = async (req, res, next) => {
 
 module.exports = {
   createDiscountTable,
-  getAllDiscountTables,
+  getAllDiscountsTables,
+  getAllPersonalDiscountsTables,
+  getBaseDiscountTable,
   getDiscountTableById,
   updateDiscountTable,
   deleteDiscountTable,

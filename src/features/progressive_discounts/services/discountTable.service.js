@@ -1,4 +1,5 @@
 const DiscountTable = require("../models/DiscountTable");
+const Partner = require("../models/Partner");
 const { isValidObjectId } = require("../../../utils/validation");
 
 const {
@@ -7,14 +8,6 @@ const {
   NotFoundError,
 } = require("../../../utils/apiError");
 
-/**
- * Create a new discount table
- * @param {Object} data - The discount table data
- * @param {string} data.nickname - The nickname of the discount table
- * @param {string} data.discountType - The type of discount
- * @param {Array} data.ranges - The ranges of the discount table
- * @returns {Promise<DiscountTable>}
- */
 const createTable = async ({ nickname, discountType, ranges }) => {
   const existingDiscountTable = await DiscountTable.findOne({
     nickname: nickname,
@@ -25,7 +18,7 @@ const createTable = async ({ nickname, discountType, ranges }) => {
   const existingDiscountTableWithSameRanges = await DiscountTable.findOne({
     ranges: ranges,
   });
-  if (existingDiscountTableWithSameRanges) {
+  if (existingDiscountTableWithSameRanges && !nickname.includes("Clone")) {
     throw new ConflictError(
       `The discount table ${existingDiscountTableWithSameRanges.nickname} with these ranges already exists`
     );
@@ -36,21 +29,32 @@ const createTable = async ({ nickname, discountType, ranges }) => {
   return discountTable;
 };
 
-/**
- * Get all discount tables
- * @returns {Promise<Array<DiscountTable>>}
- */
 const getAllTables = async () => {
   const discountTables = await DiscountTable.find();
+
   if (!discountTables) throw new NotFoundError("No discount tables found");
   return discountTables;
 };
 
-/**
- * Get a discount table by ID
- * @param {string} id - The ID of the discount table
- * @returns {Promise<DiscountTable>}
- */
+const getAllPersonalTables = async () => {
+  print("getAllPersonalTables");
+  const personalDiscountsTables = await DiscountTable.find({
+    discountType: "personal",
+  });
+  if (!personalDiscountsTables)
+    throw new NotFoundError("No personal discount tables found");
+  return personalDiscountsTables;
+};
+
+const getBaseDiscountTable = async () => {
+  const baseDiscountTable = await DiscountTable.findOne({
+    discountType: "base",
+  });
+  if (!baseDiscountTable)
+    throw new NotFoundError("No base discount table found");
+  return baseDiscountTable;
+};
+
 const getTableById = async (id) => {
   if (!isValidObjectId(id))
     throw new BadRequestError("Invalid discount table ID");
@@ -59,24 +63,20 @@ const getTableById = async (id) => {
   return discountTable;
 };
 
-/**
- * Update a discount table
- * @param {string} id - The ID of the discount table
- * @param {Object} data - The fields to update
- * @returns {Promise<DiscountTable>}
- */
-const updateTable = async (id, data) => {
+const updateTable = async (id, nickname, discountType, ranges) => {
   if (!isValidObjectId(id))
     throw new BadRequestError("Invalid discount table ID");
 
   const updateFields = {};
-  if (typeof data.nickname !== "undefined")
-    updateFields.nickname = data.nickname;
-  if (typeof data.discountType !== "undefined")
-    updateFields.discountType = data.discountType;
-  if (typeof data.ranges !== "undefined") {
-    _validateRanges(data.ranges);
-    updateFields.ranges = data.ranges;
+  if (typeof nickname !== "undefined" && nickname !== null) {
+    updateFields.nickname = nickname;
+  }
+  if (typeof discountType !== "undefined" && discountType !== null) {
+    updateFields.discountType = discountType;
+  }
+  if (typeof ranges !== "undefined" && ranges !== null) {
+    _validateRanges(ranges);
+    updateFields.ranges = ranges;
   }
 
   if (Object.keys(updateFields).length === 0) {
@@ -94,15 +94,48 @@ const updateTable = async (id, data) => {
   return discountTable;
 };
 
-/**
- * Delete a discount table
- * @param {string} id - The ID of the discount table
- * @returns {Promise<void>}
- */
 const deleteTable = async (id) => {
   if (!isValidObjectId(id))
     throw new BadRequestError("Invalid discount table ID");
+
+  const discountTable = await DiscountTable.findById(id);
+  if (!discountTable) {
+    throw new NotFoundError("Discount table not found");
+  }
+
+  const baseDiscountTable = await DiscountTable.findOne({
+    discountType: "base",
+  });
+
+  if (!baseDiscountTable) {
+    throw new NotFoundError(
+      "Base discount table not found. Cannot delete table without a base table."
+    );
+  }
+
+  // Find all partners associated with the table to be deleted
+  const partnersToUpdate = await Partner.find({
+    discountsTableId: id,
+  });
+
+  // Update all partners to reference the base table
+  if (partnersToUpdate.length > 0) {
+    await Partner.updateMany(
+      { discountsTableId: id },
+      {
+        discountsTableId: baseDiscountTable._id,
+        discountType: "base",
+      }
+    );
+  }
+
   await DiscountTable.findByIdAndDelete(id);
+
+  return {
+    deletedTable: discountTable,
+    updatedPartners: partnersToUpdate.length,
+    baseTable: baseDiscountTable,
+  };
 };
 
 const _validateRanges = (ranges) => {
@@ -127,6 +160,8 @@ const _validateRanges = (ranges) => {
 module.exports = {
   createTable,
   getAllTables,
+  getAllPersonalTables,
+  getBaseDiscountTable,
   getTableById,
   updateTable,
   deleteTable,

@@ -5,10 +5,14 @@ const {
   createPartnerController,
   getPartnerByIdController,
   getAllPartnersController,
+  updatePartnerController,
+  deletePartnerController,
 } = require("../controllers/partner");
 
-router.post("/", createPartnerController);
+router.get("/all", getAllPartnersController);
 router.get("/:id", getPartnerByIdController);
-router.get("/", getAllPartnersController);
+router.post("/", createPartnerController);
+router.patch("/:id", updatePartnerController);
+router.delete("/:id", deletePartnerController);
 
 module.exports = router;

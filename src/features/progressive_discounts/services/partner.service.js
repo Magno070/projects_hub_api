@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const Partner = require("../models/Partner");
 const DiscountTable = require("../models/DiscountTable"); // <-- 1. Importar o modelo para verificação
 const { isValidObjectId } = require("../../../utils/validation");
@@ -8,15 +7,6 @@ const {
   NotFoundError,
 } = require("../../../utils/apiError");
 
-/**
- * Create a new partner
- * @param {string} name - The name of the partner
- * @param {number} dailyPrice - The daily price of the partner
- * @param {number} clientsAmount - The number of clients of the partner
- * @param {string} discountType - The type of discount of the partner
- * @param {string} discountsTableId - The id of the discounts table of the partner
- * @returns {Promise<Partner>}
- */
 const createPartner = async ({
   name,
   dailyPrice,
@@ -24,73 +14,44 @@ const createPartner = async ({
   discountType,
   discountsTableId,
 }) => {
-  // Validações rápidas (fora da transação)
   if (!isValidObjectId(discountsTableId)) {
     throw new BadRequestError("Invalid discounts table ID");
   }
-  if (typeof dailyPrice !== "number" || dailyPrice <= 0) {
+  if (dailyPrice <= 0) {
     throw new BadRequestError("Daily price must be a positive number");
   }
-  if (typeof clientsAmount !== "number" || clientsAmount <= 0) {
+  if (clientsAmount <= 0) {
     throw new BadRequestError("Clients amount must be a positive number");
   }
   if (discountType !== "base" && discountType !== "personal") {
     throw new BadRequestError("Discount type must be 'base' or 'personal'");
   }
 
-  // 2. Iniciar a sessão do Mongoose para a transação
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    // 3. Verificar se a tabela de desconto existe (PONTO 3)
-    //    Usamos .session(session) para incluir esta leitura na transação
-    const discountTable = await DiscountTable.findById(
-      discountsTableId
-    ).session(session);
-    if (!discountTable) {
-      // Usamos NotFoundError, seguindo o padrão do seu discountTable.service
-      throw new NotFoundError(
-        `Discounts table with ID ${discountsTableId} not found`
-      );
-    }
-
-    // 4. Verificar parceiro existente (dentro da transação para evitar race conditions)
-    const existingPartner = await Partner.findOne({ name }).session(session);
-    if (existingPartner) {
-      throw new ConflictError(`Partner with name ${name} already exists`);
-    }
-
-    // 5. Criar o novo parceiro
-    const partner = new Partner({
-      name,
-      dailyPrice,
-      clientsAmount,
-      discountType,
-      discountsTableId,
-    });
-
-    // Usamos .save({ session }) para incluir esta escrita na transação
-    await partner.save({ session });
-
-    // 6. Se tudo deu certo, "comitar" a transação
-    await session.commitTransaction();
-    return partner;
-  } catch (error) {
-    // 7. Se algo falhou, reverter (abortar) a transação
-    await session.abortTransaction();
-    throw error; // Re-lança o erro para o errorMiddleware capturar
-  } finally {
-    // 8. Encerrar a sessão em qualquer cenário (sucesso ou falha)
-    session.endSession();
+  const discountTable = await DiscountTable.findById(discountsTableId);
+  if (!discountTable) {
+    throw new NotFoundError(
+      `Discounts table with ID ${discountsTableId} not found`
+    );
   }
+
+  const existingPartner = await Partner.findOne({ name });
+  if (existingPartner) {
+    throw new ConflictError(`Partner with name ${name} already exists`);
+  }
+
+  const partner = new Partner({
+    name,
+    dailyPrice,
+    clientsAmount,
+    discountType,
+    discountsTableId,
+  });
+
+  await partner.save();
+
+  return partner;
 };
 
-/**
- * Get a partner by ID
- * @param {string} id - The ID of the partner
- * @returns {Promise<Partner>}
- */
 const getPartnerById = async (id) => {
   if (!isValidObjectId(id)) throw new BadRequestError("Invalid partner ID");
   const partner = await Partner.findById(id);
@@ -98,18 +59,41 @@ const getPartnerById = async (id) => {
   return partner;
 };
 
-/**
- * Get all partners
- * @returns {Promise<Array<Partner>>}
- */
 const getAllPartners = async () => {
   const partners = await Partner.find();
   if (!partners) throw new NotFoundError("No partners found");
   return partners;
 };
 
+const updatePartner = async (
+  id,
+  { name, dailyPrice, clientsAmount, discountType, discountsTableId }
+) => {
+  if (!isValidObjectId(id)) throw new BadRequestError("Invalid partner ID");
+  const updateFields = {};
+  if (name) updateFields.name = name;
+  if (dailyPrice) updateFields.dailyPrice = dailyPrice;
+  if (clientsAmount) updateFields.clientsAmount = clientsAmount;
+  if (discountType) updateFields.discountType = discountType;
+  if (discountsTableId) updateFields.discountsTableId = discountsTableId;
+  const partner = await Partner.findByIdAndUpdate(id, updateFields, {
+    new: true,
+  });
+  if (!partner) throw new NotFoundError("Partner not found");
+  return partner;
+};
+
+const deletePartner = async (id) => {
+  if (!isValidObjectId(id)) throw new BadRequestError("Invalid partner ID");
+  const partner = await Partner.findByIdAndDelete(id);
+  if (!partner) throw new NotFoundError("Partner not found");
+  return partner;
+};
+
 module.exports = {
   createPartner,
   getPartnerById,
   getAllPartners,
+  updatePartner,
+  deletePartner,
 };
