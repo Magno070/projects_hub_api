@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const CalculationLog = require("../models/CalculationLog");
 const Partner = require("../models/Partner");
 const DiscountTable = require("../models/DiscountTable");
@@ -11,12 +12,6 @@ const {
 const { isValidObjectId } = require("../../../utils/validation");
 
 const calculatePartnerDiscounts = async (partnerId, discountTableId) => {
-  if (partnerId === null || partnerId === undefined) {
-    throw new BadRequestError("Partner ID is required");
-  }
-  if (discountTableId === null || discountTableId === undefined) {
-    throw new BadRequestError("Discount table ID is required");
-  }
   if (!isValidObjectId(partnerId))
     throw new BadRequestError("Invalid partner ID");
   if (!isValidObjectId(discountTableId))
@@ -98,14 +93,38 @@ const calculatePartnerDiscounts = async (partnerId, discountTableId) => {
   // Cria o log da cálculo
   const calculationLog = new CalculationLog({
     partnerId: partnerId,
-    partnerDailyPriceStamp: partnerDailyPrice,
-    partnerClientsAmountStamp: partnerClientsAmount,
+    partnerDailyPriceStamp: Number(partnerDailyPrice),
+    partnerClientsAmountStamp: Number(partnerClientsAmount),
     discountTableId: discountTableId,
-    discountRangesStamp: discountRanges,
-    details: details,
-    totalPriceResult: totalPriceResult,
-    totalDiscountResult: totalDiscountResult,
-    totalPriceAfterDiscountResult: totalPriceAfterDiscountResult,
+    discountRangesStamp: discountRanges.map((range) => ({
+      initialRange: Number(range.initialRange),
+      finalRange: Number(range.finalRange),
+      discount: new mongoose.Types.Decimal128(range.discount.toString()),
+    })),
+    details: details.map((detail) => ({
+      initialRange: Number(detail.initialRange),
+      finalRange: Number(detail.finalRange),
+      discount: new mongoose.Types.Decimal128(detail.discount.toString()),
+      rangeTotalClientsAmount: Number(detail.rangeTotalClientsAmount),
+      rangeTotalPrice: new mongoose.Types.Decimal128(
+        detail.rangeTotalPrice.toString()
+      ),
+      rangeTotalDiscount: new mongoose.Types.Decimal128(
+        detail.rangeTotalDiscount.toString()
+      ),
+      rangeTotalPriceAfterDiscount: new mongoose.Types.Decimal128(
+        detail.rangeTotalPriceAfterDiscount.toString()
+      ),
+    })),
+    totalPriceResult: new mongoose.Types.Decimal128(
+      totalPriceResult.toString()
+    ),
+    totalDiscountResult: new mongoose.Types.Decimal128(
+      totalDiscountResult.toString()
+    ),
+    totalPriceAfterDiscountResult: new mongoose.Types.Decimal128(
+      totalPriceAfterDiscountResult.toString()
+    ),
   });
 
   // Salva o log no banco de dados

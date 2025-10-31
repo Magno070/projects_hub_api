@@ -1,8 +1,20 @@
 const partnerService = require("../services/partner.service");
+const { BadRequestError } = require("../../../utils/apiError");
 
 const createPartnerController = async (req, res, next) => {
   const { name, dailyPrice, clientsAmount, discountType, discountsTableId } =
     req.body;
+  if (
+    !name ||
+    !dailyPrice ||
+    !clientsAmount ||
+    !discountType ||
+    !discountsTableId
+  ) {
+    throw new BadRequestError(
+      "All fields are required: name, dailyPrice, clientsAmount, discountType, discountsTableId"
+    );
+  }
   try {
     const partner = await partnerService.createPartner({
       name,
@@ -22,7 +34,8 @@ const createPartnerController = async (req, res, next) => {
 };
 
 const getPartnerByIdController = async (req, res, next) => {
-  const { id } = req.params;
+  const { id } = req.query;
+  if (!id) throw new BadRequestError("ID parameter is required");
   try {
     const partner = await partnerService.getPartnerById(id);
     res.status(200).json({
@@ -48,8 +61,25 @@ const getAllPartnersController = async (req, res, next) => {
   }
 };
 
+const getPartnerLogsController = async (req, res, next) => {
+  const { partnerId } = req.query;
+  if (!partnerId) throw new BadRequestError("Partner ID parameter is required");
+
+  try {
+    const calculationLogs = await partnerService.getPartnerLogs(partnerId);
+    res.status(200).json({
+      success: true,
+      message: "Calculation logs fetched successfully",
+      calculationLogs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const updatePartnerController = async (req, res, next) => {
-  const { id } = req.params;
+  const { id } = req.query;
+  if (!id) throw new BadRequestError("ID parameter is required");
   const { name, dailyPrice, clientsAmount, discountType, discountsTableId } =
     req.body;
   try {
@@ -71,7 +101,8 @@ const updatePartnerController = async (req, res, next) => {
 };
 
 const deletePartnerController = async (req, res, next) => {
-  const { id } = req.params;
+  const { id } = req.query;
+  if (!id) throw new BadRequestError("ID parameter is required");
   try {
     const partner = await partnerService.deletePartner(id);
     res.status(200).json({
@@ -88,6 +119,7 @@ module.exports = {
   createPartnerController,
   getPartnerByIdController,
   getAllPartnersController,
+  getPartnerLogsController,
   updatePartnerController,
   deletePartnerController,
 };

@@ -1,5 +1,6 @@
 const Partner = require("../models/Partner");
-const DiscountTable = require("../models/DiscountTable"); // <-- 1. Importar o modelo para verificação
+const DiscountTable = require("../models/DiscountTable");
+const CalculationLog = require("../models/CalculationLog");
 const { isValidObjectId } = require("../../../utils/validation");
 const {
   BadRequestError,
@@ -65,11 +66,21 @@ const getAllPartners = async () => {
   return partners;
 };
 
+const getPartnerLogs = async (partnerId) => {
+  if (!isValidObjectId(partnerId))
+    throw new BadRequestError("Invalid partner ID");
+  const calculationLogs = await CalculationLog.find({ partnerId: partnerId });
+  if (!calculationLogs) throw new NotFoundError("No calculation logs found");
+  return calculationLogs;
+};
+
 const updatePartner = async (
   id,
   { name, dailyPrice, clientsAmount, discountType, discountsTableId }
 ) => {
-  if (!isValidObjectId(id)) throw new BadRequestError("Invalid partner ID");
+  if (!isValidObjectId(id)) {
+    throw new BadRequestError("Invalid partner ID");
+  }
   const updateFields = {};
   if (name) updateFields.name = name;
   if (dailyPrice) updateFields.dailyPrice = dailyPrice;
@@ -94,6 +105,7 @@ module.exports = {
   createPartner,
   getPartnerById,
   getAllPartners,
+  getPartnerLogs,
   updatePartner,
   deletePartner,
 };

@@ -1,7 +1,13 @@
 const discountTableService = require("../services/discountTable.service");
+const { BadRequestError } = require("../../../utils/apiError");
 
 const createDiscountTable = async (req, res, next) => {
   const { nickname, discountType, ranges } = req.body;
+  if (!nickname || !discountType || !ranges) {
+    throw new BadRequestError(
+      "All fields are required: nickname, discountType, ranges"
+    );
+  }
   try {
     const discountTable = await discountTableService.createTable({
       nickname,
@@ -60,7 +66,8 @@ const getBaseDiscountTable = async (req, res, next) => {
 };
 
 const getDiscountTableById = async (req, res, next) => {
-  const { id } = req.params;
+  const { id } = req.query;
+  if (!id) throw new BadRequestError("ID parameter is required");
   try {
     const discountTable = await discountTableService.getTableById(id);
     res.status(200).json({
@@ -76,7 +83,8 @@ const getDiscountTableById = async (req, res, next) => {
 };
 
 const updateDiscountTable = async (req, res, next) => {
-  const { id } = req.params;
+  const { id } = req.query;
+  if (!id) throw new BadRequestError("ID parameter is required");
   const { nickname, discountType, ranges } = req.body;
   try {
     const discountTable = await discountTableService.updateTable(
@@ -96,7 +104,8 @@ const updateDiscountTable = async (req, res, next) => {
 };
 
 const deleteDiscountTable = async (req, res, next) => {
-  const { id } = req.params;
+  const { id } = req.query;
+  if (!id) throw new BadRequestError("ID parameter is required");
   try {
     const result = await discountTableService.deleteTable(id);
     res.status(200).json({

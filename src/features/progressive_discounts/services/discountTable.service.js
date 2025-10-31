@@ -37,7 +37,6 @@ const getAllTables = async () => {
 };
 
 const getAllPersonalTables = async () => {
-  print("getAllPersonalTables");
   const personalDiscountsTables = await DiscountTable.find({
     discountType: "personal",
   });

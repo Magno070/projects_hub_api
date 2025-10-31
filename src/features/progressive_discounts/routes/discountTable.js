@@ -11,12 +11,19 @@ const {
   deleteDiscountTable,
 } = require("../controllers/discountTable");
 
+// Post
 router.post("/", createDiscountTable);
+
+// GET
 router.get("/all", getAllDiscountsTables);
 router.get("/personal", getAllPersonalDiscountsTables);
 router.get("/base", getBaseDiscountTable);
-router.get("/:id", getDiscountTableById);
-router.patch("/:id", updateDiscountTable);
-router.delete("/:id", deleteDiscountTable);
+router.get("/", getDiscountTableById);
+
+// PATCH
+router.patch("/", updateDiscountTable);
+
+// DELETE
+router.delete("/", deleteDiscountTable);
 
 module.exports = router;

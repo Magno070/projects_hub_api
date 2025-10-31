@@ -3,6 +3,6 @@ const router = express.Router();
 
 const { calculatePartnerDiscounts } = require("../controllers/calculator");
 
-router.post("/", calculatePartnerDiscounts);
+router.post("/calculate-partner-discounts", calculatePartnerDiscounts);
 
 module.exports = router;
