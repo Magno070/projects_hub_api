@@ -66,11 +66,12 @@ const getAllPartners = async () => {
   return partners;
 };
 
-const getPartnerLogs = async (partnerId) => {
-  if (!isValidObjectId(partnerId))
-    throw new BadRequestError("Invalid partner ID");
-  const calculationLogs = await CalculationLog.find({ partnerId: partnerId });
-  if (!calculationLogs) throw new NotFoundError("No calculation logs found");
+const getPartnerLogs = async (id) => {
+  if (!isValidObjectId(id)) throw new BadRequestError("Invalid partner ID");
+  const calculationLogs = await CalculationLog.find({ partnerId: id });
+  if (!calculationLogs || calculationLogs.length === 0) {
+    throw new NotFoundError("No calculation logs found");
+  }
   return calculationLogs;
 };
 

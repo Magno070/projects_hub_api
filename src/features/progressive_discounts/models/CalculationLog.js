@@ -12,6 +12,10 @@ const calculationLogSchema = new Schema({
     ref: "DiscountTable",
     required: true,
   },
+  tableNicknameStamp: {
+    type: String,
+    required: true,
+  },
   partnerDailyPriceStamp: {
     type: Number,
     required: true,
@@ -32,7 +36,7 @@ const calculationLogSchema = new Schema({
         required: true,
       },
       discount: {
-        type: Schema.Types.Decimal128,
+        type: Number,
         required: true,
       },
     },
@@ -50,7 +54,7 @@ const calculationLogSchema = new Schema({
         required: true,
       },
       discount: {
-        type: Schema.Types.Decimal128,
+        type: Number,
         required: true,
       },
       rangeTotalClientsAmount: {
@@ -58,29 +62,29 @@ const calculationLogSchema = new Schema({
         required: true,
       },
       rangeTotalPrice: {
-        type: Schema.Types.Decimal128,
+        type: Number,
         required: true,
       },
       rangeTotalDiscount: {
-        type: Schema.Types.Decimal128,
+        type: Number,
         required: true,
       },
       rangeTotalPriceAfterDiscount: {
-        type: Schema.Types.Decimal128,
+        type: Number,
         required: true,
       },
     },
   },
   totalPriceResult: {
-    type: Schema.Types.Decimal128,
+    type: Number,
     required: true,
   },
   totalDiscountResult: {
-    type: Schema.Types.Decimal128,
+    type: Number,
     required: true,
   },
   totalPriceAfterDiscountResult: {
-    type: Schema.Types.Decimal128,
+    type: Number,
     required: true,
   },
   calculationDate: {

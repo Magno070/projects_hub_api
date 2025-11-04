@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const CalculationLog = require("../models/CalculationLog");
 const Partner = require("../models/Partner");
 const DiscountTable = require("../models/DiscountTable");
@@ -96,49 +95,30 @@ const calculatePartnerDiscounts = async (partnerId, discountTableId) => {
     partnerDailyPriceStamp: Number(partnerDailyPrice),
     partnerClientsAmountStamp: Number(partnerClientsAmount),
     discountTableId: discountTableId,
+    tableNicknameStamp: discountTable.nickname,
     discountRangesStamp: discountRanges.map((range) => ({
       initialRange: Number(range.initialRange),
       finalRange: Number(range.finalRange),
-      discount: new mongoose.Types.Decimal128(range.discount.toString()),
+      discount: Number(range.discount),
     })),
     details: details.map((detail) => ({
       initialRange: Number(detail.initialRange),
       finalRange: Number(detail.finalRange),
-      discount: new mongoose.Types.Decimal128(detail.discount.toString()),
+      discount: Number(detail.discount),
       rangeTotalClientsAmount: Number(detail.rangeTotalClientsAmount),
-      rangeTotalPrice: new mongoose.Types.Decimal128(
-        detail.rangeTotalPrice.toString()
-      ),
-      rangeTotalDiscount: new mongoose.Types.Decimal128(
-        detail.rangeTotalDiscount.toString()
-      ),
-      rangeTotalPriceAfterDiscount: new mongoose.Types.Decimal128(
-        detail.rangeTotalPriceAfterDiscount.toString()
-      ),
+      rangeTotalPrice: Number(detail.rangeTotalPrice),
+      rangeTotalDiscount: Number(detail.rangeTotalDiscount),
+      rangeTotalPriceAfterDiscount: Number(detail.rangeTotalPriceAfterDiscount),
     })),
-    totalPriceResult: new mongoose.Types.Decimal128(
-      totalPriceResult.toString()
-    ),
-    totalDiscountResult: new mongoose.Types.Decimal128(
-      totalDiscountResult.toString()
-    ),
-    totalPriceAfterDiscountResult: new mongoose.Types.Decimal128(
-      totalPriceAfterDiscountResult.toString()
-    ),
+    totalPriceResult: Number(totalPriceResult),
+    totalDiscountResult: Number(totalDiscountResult),
+    totalPriceAfterDiscountResult: Number(totalPriceAfterDiscountResult),
   });
 
   // Salva o log no banco de dados
   await calculationLog.save();
 
-  return {
-    partnerId,
-    discountTableId,
-    totalPrice: totalPriceResult,
-    totalDiscount: totalDiscountResult,
-    finalPrice: totalPriceAfterDiscountResult,
-    details: details,
-    calculationLogId: calculationLog._id,
-  };
+  return calculationLog;
 };
 
 module.exports = {

@@ -35,7 +35,10 @@ const createPartnerController = async (req, res, next) => {
 
 const getPartnerByIdController = async (req, res, next) => {
   const { id } = req.query;
-  if (!id) throw new BadRequestError("ID parameter is required");
+  // Se não houver ID, retorna todos os partners
+  if (!id) {
+    return getAllPartnersController(req, res, next);
+  }
   try {
     const partner = await partnerService.getPartnerById(id);
     res.status(200).json({
@@ -62,11 +65,11 @@ const getAllPartnersController = async (req, res, next) => {
 };
 
 const getPartnerLogsController = async (req, res, next) => {
-  const { partnerId } = req.query;
-  if (!partnerId) throw new BadRequestError("Partner ID parameter is required");
+  const { id } = req.query;
+  if (!id) throw new BadRequestError("Partner ID parameter is required");
 
   try {
-    const calculationLogs = await partnerService.getPartnerLogs(partnerId);
+    const calculationLogs = await partnerService.getPartnerLogs(id);
     res.status(200).json({
       success: true,
       message: "Calculation logs fetched successfully",
